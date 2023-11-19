@@ -2,7 +2,7 @@ from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
 
-from .models import Stance
+from .models.stance import Stance
 
 sqlite_url = "sqlite:///db.sqlite"
 connect_args = {"check_same_thread": False}
