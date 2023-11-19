@@ -5,10 +5,8 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 
-class Fighter(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
-    created_at: datetime = Field(default_factory=datetime.now, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.now, nullable=False)
+# TODO: Add field for dateOfBirth
+class FighterBase(SQLModel):
     first_name: Optional[str] = Field(
         default=None,
         alias="firstName",
@@ -32,7 +30,7 @@ class Fighter(SQLModel, table=True):
         description="Nickname cannot be an empty string",
         index=True,
     )
-    # TODO: Add field for dateOfBirth
+
     height: Optional[int] = Field(
         default=None,
         title="Height (in)",
@@ -51,7 +49,7 @@ class Fighter(SQLModel, table=True):
         gt=0,
         description="Reach must be positive",
     )
-    stance_id: Optional[int] = Field(default=None, foreign_key="stance.id")
+
     wins: int = Field(
         default=0,
         nullable=False,
@@ -87,6 +85,7 @@ class Fighter(SQLModel, table=True):
         alias="currentChampion",
         title="Is the fighter currently a champion?",
     )
+
     slpm: Optional[float] = Field(
         default=None,
         title="Significant strikes landed per minute",
@@ -140,4 +139,20 @@ class Fighter(SQLModel, table=True):
         title="Average submissions attempted per 15 minutes",
         ge=0.0,
         description="Sub. avg. cannot be negative",
+    )
+
+
+class Fighter(FighterBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.now, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.now, nullable=False)
+    stance_id: Optional[int] = Field(default=None, foreign_key="stance.id")
+
+
+class FighterCreate(FighterBase):
+    stance: Optional[str] = Field(
+        default=None,
+        title="Stance",
+        min_length=1,
+        description="Stance cannot be an empty string",
     )
