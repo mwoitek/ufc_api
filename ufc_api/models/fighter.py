@@ -51,7 +51,7 @@ class Fighter(SQLModel, table=True):
         gt=0,
         description="Reach must be positive",
     )
-    # TODO: Add field for stance
+    stance_id: Optional[int] = Field(default=None, foreign_key="stance.id")
     wins: int = Field(
         default=0,
         nullable=False,
