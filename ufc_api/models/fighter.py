@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import root_validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -54,6 +55,22 @@ class FighterCreate(SQLModel):
         description="Average submissions attempted per 15 minutes",
         ge=0.0,
     )
+
+    @root_validator
+    def check_fighter_name(cls, values: dict) -> dict:
+        first_name = values.get("first_name")
+        if not isinstance(first_name, str):
+            first_name = ""
+
+        last_name = values.get("last_name")
+        if not isinstance(last_name, str):
+            last_name = ""
+
+        full_name = (first_name + " " + last_name).strip()
+        if full_name == "":
+            raise ValueError("fighter has no name")
+
+        return values
 
 
 class Fighter(SQLModel, table=True):
