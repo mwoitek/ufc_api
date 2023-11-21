@@ -101,3 +101,26 @@ class Fighter(SQLModel, table=True):
     td_acc: Optional[float] = Field(alias="tdAcc")
     td_def: Optional[float] = Field(alias="tdDef")
     sub_avg: Optional[float] = Field(alias="subAvg")
+
+
+class FighterReadSimple(SQLModel):
+    id: int = Field(description="ID")
+    created_at: datetime = Field(alias="createdAt", description="Date and time of creation")
+    full_name: str = Field(alias="fullName", description="Full name")
+
+    @classmethod
+    def from_db_obj(cls, db_fighter: Fighter) -> "FighterReadSimple":
+        first_name = db_fighter.first_name
+        if not isinstance(first_name, str):
+            first_name = ""
+
+        last_name = db_fighter.last_name
+        if not isinstance(last_name, str):
+            last_name = ""
+
+        data_dict = {
+            "id": db_fighter.id,
+            "createdAt": db_fighter.created_at,
+            "fullName": (first_name + " " + last_name).strip(),
+        }
+        return cls.parse_obj(data_dict)
