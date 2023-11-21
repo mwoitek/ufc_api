@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import FastAPI
 from fastapi import status
 from sqlmodel import Session
@@ -24,10 +26,15 @@ def on_startup() -> None:
 @app.post("/fighters/", response_model=FighterReadSimple, status_code=status.HTTP_201_CREATED)
 def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
     fighter_dict = fighter.dict(by_alias=True)
-    stance = fighter_dict.pop("stance", None)
+
+    # If necessary, add date of birth
+    date_of_birth = fighter_dict.pop("dateOfBirth", None)
+    if isinstance(date_of_birth, str):
+        fighter_dict["dateOfBirth"] = date.fromisoformat(date_of_birth)
 
     with Session(engine) as session:
         # If stance was passed, get the corresponding ID
+        stance = fighter_dict.pop("stance", None)
         if isinstance(stance, str):
             statement = select(Stance.id).where(Stance.name == stance.title())
             stance_id = session.exec(statement).one_or_none()

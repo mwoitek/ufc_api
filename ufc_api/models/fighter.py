@@ -1,3 +1,4 @@
+from datetime import date
 from datetime import datetime
 from typing import Optional
 
@@ -5,13 +6,18 @@ from pydantic import root_validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-# TODO: Add field for dateOfBirth
-
 
 class FighterCreate(SQLModel):
     first_name: Optional[str] = Field(default=None, alias="firstName", description="First name", min_length=1)
     last_name: Optional[str] = Field(default=None, alias="lastName", description="Last name", min_length=1)
     nickname: Optional[str] = Field(default=None, description="Nickname", min_length=1)
+
+    date_of_birth: Optional[str] = Field(
+        default=None,
+        alias="dateOfBirth",
+        description="Date of birth",
+        regex=r"\d{4}-\d{2}-\d{2}",
+    )
 
     height: Optional[int] = Field(default=None, description="Height (in)", gt=0)
     weight: Optional[int] = Field(default=None, description="Weight (lbs)", gt=0)
@@ -81,6 +87,8 @@ class Fighter(SQLModel, table=True):
     first_name: Optional[str] = Field(alias="firstName", index=True)
     last_name: Optional[str] = Field(alias="lastName", index=True)
     nickname: Optional[str] = Field(index=True)
+
+    date_of_birth: Optional[date] = Field(default=None, alias="dateOfBirth")
 
     height: Optional[int]
     weight: Optional[int]
