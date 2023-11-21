@@ -11,7 +11,7 @@ from ..models.fighter import FighterCreate
 from ..models.fighter import FighterReadSimple
 from ..models.stance import Stance
 
-router = APIRouter(prefix="/fighters/", tags=["fighters"])
+router = APIRouter(prefix="/fighters", tags=["fighters"])
 
 
 # TODO: Implement error handling
