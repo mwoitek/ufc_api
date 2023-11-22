@@ -39,4 +39,8 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
         session.commit()
         session.refresh(db_fighter)
 
-        return FighterReadSimple.from_db_obj(db_fighter)
+        response_data = db_fighter.dict(
+            by_alias=True,
+            include={"id", "created_at", "updated_at", "first_name", "last_name"},
+        )
+        return FighterReadSimple.parse_obj(response_data)

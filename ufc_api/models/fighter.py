@@ -5,12 +5,14 @@ from typing import Optional
 
 from pydantic import create_model
 from pydantic import root_validator
+from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
 # TODO: I HATE this code. There is a lot of repetition. FIND A BETTER SOLUTION!!!!!
 
 FIELDS = {
+    "id_required": (int, Field(..., alias="id", description="ID")),
     "created_at": (
         datetime,
         Field(
@@ -99,7 +101,7 @@ FIELDS = {
 }
 
 
-def check_full_name(cls, values: dict) -> dict:
+def get_full_name(values: dict) -> str:
     first_name = values.get("first_name")
     if not isinstance(first_name, str):
         first_name = ""
@@ -108,14 +110,16 @@ def check_full_name(cls, values: dict) -> dict:
     if not isinstance(last_name, str):
         last_name = ""
 
-    full_name = (first_name + " " + last_name).strip()
-    if full_name == "":
-        raise ValueError("fighter has no name")
+    return (first_name + " " + last_name).strip()
 
+
+def check_full_name(cls, values: dict) -> dict:
+    if get_full_name(values) == "":
+        raise ValueError("fighter has no name")
     return values
 
 
-fields = {k: v for k, v in FIELDS.items() if k not in ["created_at", "updated_at"]}
+fields = {k: v for k, v in FIELDS.items() if k not in ["id_required", "created_at", "updated_at"]}
 FighterCreate = create_model(
     "FighterCreate",
     __base__=SQLModel,
@@ -159,27 +163,23 @@ fields = {k: fields[k] for k in field_keys}
 Fighter = create_model("Fighter", __base__=SQLModel, __cls_kwargs__={"table": True}, **fields)
 
 
-class FighterReadSimple(SQLModel):
-    id: int = Field(description="ID")
-    created_at: datetime = Field(alias="createdAt", description="Date and time of creation")
-    full_name: str = Field(alias="fullName", description="Full name")
+def fill_full_name(cls, value: Optional[str], values: dict) -> str:
+    if value is not None:
+        return value
+    return get_full_name(values)
 
-    @classmethod
-    def from_db_obj(cls, db_fighter: Fighter) -> "FighterReadSimple":
-        first_name = db_fighter.first_name
-        if not isinstance(first_name, str):
-            first_name = ""
 
-        last_name = db_fighter.last_name
-        if not isinstance(last_name, str):
-            last_name = ""
-
-        data_dict = {
-            "id": db_fighter.id,
-            "createdAt": db_fighter.created_at,
-            "fullName": (first_name + " " + last_name).strip(),
-        }
-        return cls.parse_obj(data_dict)
+field_keys = ["id_required", "created_at", "updated_at", "first_name", "last_name"]
+fields = {k: FIELDS[k] for k in field_keys}
+fields["first_name"][1].exclude = True
+fields["last_name"][1].exclude = True
+fields.update(full_name=(Optional[str], Field(default=None, alias="fullName", description="Full name")))
+FighterReadSimple = create_model(
+    "FighterReadSimple",
+    __base__=SQLModel,
+    __validators__={"full_name_filler": validator("full_name", always=True)(fill_full_name)},
+    **fields,
+)
 
 
 class FighterNames(SQLModel):
