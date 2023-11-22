@@ -3,83 +3,106 @@ from datetime import datetime
 from typing import Any
 from typing import Optional
 
+from pydantic import create_model
 from pydantic import root_validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
 # TODO: I HATE this code. There is a lot of repetition. FIND A BETTER SOLUTION!!!!!
 
+field_defs = {
+    "first_name": (
+        Optional[str],
+        Field(default=None, alias="firstName", description="First name", min_length=1, index=True),
+    ),
+    "last_name": (
+        Optional[str],
+        Field(default=None, alias="lastName", description="Last name", min_length=1, index=True),
+    ),
+    "nickname": (
+        Optional[str],
+        Field(default=None, description="Nickname", min_length=1, index=True),
+    ),
+    "dob_str": (
+        Optional[str],
+        Field(default=None, alias="dateOfBirth", description="Date of birth", regex=r"\d{4}-\d{1,2}-\d{1,2}"),
+    ),
+    "height": (Optional[int], Field(default=None, description="Height (in)", gt=0)),
+    "weight": (Optional[int], Field(default=None, description="Weight (lbs)", gt=0)),
+    "reach": (Optional[int], Field(default=None, description="Reach (in)", gt=0)),
+    "stance": (Optional[str], Field(default=None, description="Stance", min_length=1)),
+    "wins": (int, Field(..., description="Number of wins", ge=0, nullable=False)),
+    "losses": (int, Field(..., description="Number of losses", ge=0, nullable=False)),
+    "draws": (int, Field(..., description="Number of draws", ge=0, nullable=False)),
+    "no_contests": (
+        int,
+        Field(default=0, alias="noContests", description="Number of no contests", ge=0, nullable=False),
+    ),
+    "current_champion": (
+        bool,
+        Field(
+            default=False,
+            alias="currentChampion",
+            description="Is the fighter currently a champion?",
+            nullable=False,
+        ),
+    ),
+    "slpm": (
+        Optional[float],
+        Field(default=None, description="Significant strikes landed per minute", ge=0.0),
+    ),
+    "str_acc": (
+        Optional[float],
+        Field(default=None, alias="strAcc", description="Significant striking accuracy", ge=0.0),
+    ),
+    "sapm": (
+        Optional[float],
+        Field(default=None, description="Significant strikes absorbed per minute", ge=0.0),
+    ),
+    "str_def": (
+        Optional[float],
+        Field(default=None, alias="strDef", description="Significant strike defense", ge=0.0),
+    ),
+    "td_avg": (
+        Optional[float],
+        Field(default=None, alias="tdAvg", description="Average takedowns landed per 15 minutes", ge=0.0),
+    ),
+    "td_acc": (Optional[float], Field(default=None, alias="tdAcc", description="Takedown accuracy", ge=0.0)),
+    "td_def": (Optional[float], Field(default=None, alias="tdDef", description="Takedown defense", ge=0.0)),
+    "sub_avg": (
+        Optional[float],
+        Field(
+            default=None,
+            alias="subAvg",
+            description="Average submissions attempted per 15 minutes",
+            ge=0.0,
+        ),
+    ),
+}
 
-class FighterCreate(SQLModel):
-    first_name: Optional[str] = Field(default=None, alias="firstName", description="First name", min_length=1)
-    last_name: Optional[str] = Field(default=None, alias="lastName", description="Last name", min_length=1)
-    nickname: Optional[str] = Field(default=None, description="Nickname", min_length=1)
 
-    date_of_birth: Optional[str] = Field(
-        default=None,
-        alias="dateOfBirth",
-        description="Date of birth",
-        regex=r"\d{4}-\d{2}-\d{2}",
-    )
+def check_full_name(cls, values: dict) -> dict:
+    first_name = values.get("first_name")
+    if not isinstance(first_name, str):
+        first_name = ""
 
-    height: Optional[int] = Field(default=None, description="Height (in)", gt=0)
-    weight: Optional[int] = Field(default=None, description="Weight (lbs)", gt=0)
-    reach: Optional[int] = Field(default=None, description="Reach (in)", gt=0)
-    stance: Optional[str] = Field(default=None, description="Stance", min_length=1)
+    last_name = values.get("last_name")
+    if not isinstance(last_name, str):
+        last_name = ""
 
-    wins: int = Field(description="Number of wins", ge=0)
-    losses: int = Field(description="Number of losses", ge=0)
-    draws: int = Field(description="Number of draws", ge=0)
-    no_contests: int = Field(alias="noContests", description="Number of no contests", ge=0)
-    current_champion: bool = Field(
-        alias="currentChampion",
-        description="Is the fighter currently a champion?",
-    )
+    full_name = (first_name + " " + last_name).strip()
+    if full_name == "":
+        raise ValueError("fighter has no name")
 
-    slpm: Optional[float] = Field(default=None, description="Significant strikes landed per minute", ge=0.0)
-    str_acc: Optional[float] = Field(
-        default=None,
-        alias="strAcc",
-        description="Significant striking accuracy",
-        ge=0.0,
-    )
-    sapm: Optional[float] = Field(default=None, description="Significant strikes absorbed per minute", ge=0.0)
-    str_def: Optional[float] = Field(
-        default=None,
-        alias="strDef",
-        description="Significant strike defense",
-        ge=0.0,
-    )
-    td_avg: Optional[float] = Field(
-        default=None,
-        alias="tdAvg",
-        description="Average takedowns landed per 15 minutes",
-        ge=0.0,
-    )
-    td_acc: Optional[float] = Field(default=None, alias="tdAcc", description="Takedown accuracy", ge=0.0)
-    td_def: Optional[float] = Field(default=None, alias="tdDef", description="Takedown defense", ge=0.0)
-    sub_avg: Optional[float] = Field(
-        default=None,
-        alias="subAvg",
-        description="Average submissions attempted per 15 minutes",
-        ge=0.0,
-    )
+    return values
 
-    @root_validator
-    def check_fighter_name(cls, values: dict) -> dict:
-        first_name = values.get("first_name")
-        if not isinstance(first_name, str):
-            first_name = ""
 
-        last_name = values.get("last_name")
-        if not isinstance(last_name, str):
-            last_name = ""
-
-        full_name = (first_name + " " + last_name).strip()
-        if full_name == "":
-            raise ValueError("fighter has no name")
-
-        return values
+FighterCreate = create_model(
+    "FighterCreate",
+    __base__=SQLModel,
+    __validators__={"full_name_validator": root_validator()(check_full_name)},
+    **field_defs,
+)
 
 
 class Fighter(SQLModel, table=True):
