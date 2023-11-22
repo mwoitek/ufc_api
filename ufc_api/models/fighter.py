@@ -10,7 +10,25 @@ from sqlmodel import SQLModel
 
 # TODO: I HATE this code. There is a lot of repetition. FIND A BETTER SOLUTION!!!!!
 
-field_defs = {
+FIELDS = {
+    "created_at": (
+        datetime,
+        Field(
+            default_factory=datetime.now,
+            alias="createdAt",
+            description="Date and time of creation",
+            nullable=False,
+        ),
+    ),
+    "updated_at": (
+        datetime,
+        Field(
+            default_factory=datetime.now,
+            alias="updatedAt",
+            description="Date and time of update",
+            nullable=False,
+        ),
+    ),
     "first_name": (
         Optional[str],
         Field(default=None, alias="firstName", description="First name", min_length=1, index=True),
@@ -97,44 +115,48 @@ def check_full_name(cls, values: dict) -> dict:
     return values
 
 
+fields = {k: v for k, v in FIELDS.items() if k not in ["created_at", "updated_at"]}
 FighterCreate = create_model(
     "FighterCreate",
     __base__=SQLModel,
     __validators__={"full_name_validator": root_validator()(check_full_name)},
-    **field_defs,
+    **fields,
 )
 
-
-class Fighter(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
-    created_at: datetime = Field(default_factory=datetime.now, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.now, nullable=False)
-
-    first_name: Optional[str] = Field(alias="firstName", index=True)
-    last_name: Optional[str] = Field(alias="lastName", index=True)
-    nickname: Optional[str] = Field(index=True)
-
-    date_of_birth: Optional[date] = Field(default=None, alias="dateOfBirth")
-
-    height: Optional[int]
-    weight: Optional[int]
-    reach: Optional[int]
-    stance_id: Optional[int] = Field(default=None, foreign_key="stance.id")
-
-    wins: int = Field(nullable=False)
-    losses: int = Field(nullable=False)
-    draws: int = Field(nullable=False)
-    no_contests: int = Field(nullable=False, alias="noContests")
-    current_champion: bool = Field(nullable=False, alias="currentChampion")
-
-    slpm: Optional[float]
-    str_acc: Optional[float] = Field(alias="strAcc")
-    sapm: Optional[float]
-    str_def: Optional[float] = Field(alias="strDef")
-    td_avg: Optional[float] = Field(alias="tdAvg")
-    td_acc: Optional[float] = Field(alias="tdAcc")
-    td_def: Optional[float] = Field(alias="tdDef")
-    sub_avg: Optional[float] = Field(alias="subAvg")
+fields = {
+    "id": (Optional[int], Field(default=None, primary_key=True, nullable=False)),
+    "date_of_birth": (Optional[date], Field(default=None)),
+    "stance_id": (Optional[int], Field(default=None, foreign_key="stance.id")),
+}
+fields.update(FIELDS)
+field_keys = [
+    "id",
+    "created_at",
+    "updated_at",
+    "first_name",
+    "last_name",
+    "nickname",
+    "date_of_birth",
+    "height",
+    "weight",
+    "reach",
+    "stance_id",
+    "wins",
+    "losses",
+    "draws",
+    "no_contests",
+    "current_champion",
+    "slpm",
+    "str_acc",
+    "sapm",
+    "str_def",
+    "td_avg",
+    "td_acc",
+    "td_def",
+    "sub_avg",
+]
+fields = {k: fields[k] for k in field_keys}
+Fighter = create_model("Fighter", __base__=SQLModel, __cls_kwargs__={"table": True}, **fields)
 
 
 class FighterReadSimple(SQLModel):
