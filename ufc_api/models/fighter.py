@@ -9,8 +9,6 @@ from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-# TODO: I HATE this code. There is a lot of repetition. FIND A BETTER SOLUTION!!!!!
-
 FIELDS = {
     "id_required": (int, Field(..., alias="id", description="ID")),
     "created_at": (
@@ -169,8 +167,7 @@ def fill_full_name(cls, value: Optional[str], values: dict) -> str:
     return get_full_name(values)
 
 
-field_keys = ["id_required", "created_at", "updated_at", "first_name", "last_name"]
-fields = {k: FIELDS[k] for k in field_keys}
+fields = {k: FIELDS[k] for k in ["id_required", "created_at", "updated_at", "first_name", "last_name"]}
 fields["first_name"][1].exclude = True
 fields["last_name"][1].exclude = True
 fields.update(full_name=(Optional[str], Field(default=None, alias="fullName", description="Full name")))
@@ -181,95 +178,74 @@ FighterReadSimple = create_model(
     **fields,
 )
 
+fields = {k: FIELDS[k] for k in ["first_name", "last_name", "nickname"]}
+Names = create_model("Names", __base__=SQLModel, **fields)
 
-class FighterNames(SQLModel):
-    first_name: Optional[str] = Field(alias="firstName", description="First name")
-    last_name: Optional[str] = Field(alias="lastName", description="Last name")
-    nickname: Optional[str] = Field(description="Nickname")
+fields = {k: FIELDS[k] for k in ["height", "weight", "reach"]}
+PhysicalFeatures = create_model("PhysicalFeatures", __base__=SQLModel, **fields)
 
-    # FIXME: Add correct type
-    @classmethod
-    def from_db_obj(cls, db_obj: Any) -> "FighterNames":
-        data_dict = {}
-        for k, v in cls.__fields__.items():
-            field = v.alias if isinstance(v.alias, str) else k
-            data_dict[field] = getattr(db_obj, k)
-        return cls.parse_obj(data_dict)
+fields = {k: FIELDS[k] for k in ["wins", "losses", "draws", "no_contests"]}
+Record = create_model("Record", __base__=SQLModel, **fields)
 
+field_keys = ["slpm", "str_acc", "sapm", "str_def", "td_avg", "td_acc", "td_def", "sub_avg"]
+fields = {k: FIELDS[k] for k in field_keys}
+CareerStats = create_model("CareerStats", __base__=SQLModel, **fields)
 
-class FighterPhysicalFeatures(SQLModel):
-    height: Optional[int] = Field(description="Height (in)")
-    weight: Optional[int] = Field(description="Weight (lbs)")
-    reach: Optional[int] = Field(description="Reach (in)")
-
-    # FIXME: Add correct type
-    @classmethod
-    def from_db_obj(cls, db_obj: Any) -> Optional["FighterPhysicalFeatures"]:
-        data_dict = {k: getattr(db_obj, k) for k in cls.__fields__}
-        return cls.parse_obj(data_dict) if any(v is not None for v in data_dict.values()) else None
-
-
-class FighterRecord(SQLModel):
-    wins: int = Field(description="Number of wins")
-    losses: int = Field(description="Number of losses")
-    draws: int = Field(description="Number of draws")
-    no_contests: int = Field(alias="noContests", description="Number of no contests")
-
-    # FIXME: Add correct type
-    @classmethod
-    def from_db_obj(cls, db_obj: Any) -> "FighterRecord":
-        data_dict = {}
-        for k, v in cls.__fields__.items():
-            field = v.alias if isinstance(v.alias, str) else k
-            data_dict[field] = getattr(db_obj, k)
-        return cls.parse_obj(data_dict)
+fields = {k: FIELDS[k] for k in ["id_required", "stance", "current_champion"]}
+fields.update(
+    names=(Names, Field(..., description="All known names")),
+    date_of_birth=(Optional[date], Field(default=None, alias="dateOfBirth", description="Date of birth")),
+    physical_features=(
+        Optional[PhysicalFeatures],
+        Field(default=None, alias="physicalFeatures", description="Physical features"),
+    ),
+    record=(Record, Field(..., description="MMA record")),
+    career_stats=(
+        Optional[CareerStats],
+        Field(default=None, alias="careerStats", description="Career statistics"),
+    ),
+)
+field_keys = [
+    "id_required",
+    "names",
+    "date_of_birth",
+    "physical_features",
+    "stance",
+    "record",
+    "current_champion",
+    "career_stats",
+]
+fields = {k: fields[k] for k in field_keys}
+FighterReadDetailed = create_model("FighterReadDetailed", __base__=SQLModel, **fields)
 
 
-class FighterCareerStats(SQLModel):
-    slpm: float = Field(description="Significant strikes landed per minute")
-    str_acc: float = Field(alias="strAcc", description="Significant striking accuracy")
-    sapm: float = Field(description="Significant strikes absorbed per minute")
-    str_def: float = Field(alias="strDef", description="Significant strike defense")
-    td_avg: float = Field(alias="tdAvg", description="Average takedowns landed per 15 minutes")
-    td_acc: float = Field(alias="tdAcc", description="Takedown accuracy")
-    td_def: float = Field(alias="tdDef", description="Takedown defense")
-    sub_avg: float = Field(alias="subAvg", description="Average submissions attempted per 15 minutes")
+# FIXME
+def from_db_obj(cls, db_obj: Any) -> FighterReadDetailed:
+    data_dict = {
+        "id": db_obj.id,
+        "names": Names(first_name=db_obj.first_name, last_name=db_obj.last_name, nickname=db_obj.nickname),
+        "dateOfBirth": db_obj.date_of_birth,
+        "physicalFeatures": PhysicalFeatures(height=db_obj.height, weight=db_obj.weight, reach=db_obj.reach),
+        "stance": db_obj.stance,
+        "record": Record(
+            wins=db_obj.wins,
+            losses=db_obj.losses,
+            draws=db_obj.draws,
+            no_contests=db_obj.no_contests,
+        ),
+        "currentChampion": db_obj.current_champion,
+        "careerStats": CareerStats(
+            slpm=db_obj.slpm,
+            str_acc=db_obj.str_acc,
+            sapm=db_obj.sapm,
+            str_def=db_obj.str_def,
+            td_avg=db_obj.td_avg,
+            td_acc=db_obj.td_acc,
+            td_def=db_obj.td_def,
+            sub_avg=db_obj.sub_avg,
+        ),
+    }
+    return cls.parse_obj(data_dict)
 
-    # FIXME: Add correct type
-    @classmethod
-    def from_db_obj(cls, db_obj: Any) -> Optional["FighterCareerStats"]:
-        data_dict = {}
-        for k, v in cls.__fields__.items():
-            field = v.alias if isinstance(v.alias, str) else k
-            data_dict[field] = getattr(db_obj, k)
-        return cls.parse_obj(data_dict) if all(isinstance(s, float) for s in data_dict.values()) else None
 
-
-class FighterReadDetailed(SQLModel):
-    names: FighterNames = Field(description="All known names")
-    date_of_birth: Optional[str] = Field(alias="dateOfBirth", description="Date of birth")
-    physical_features: Optional[FighterPhysicalFeatures] = Field(
-        alias="physicalFeatures",
-        description="Physical features",
-    )
-    stance: Optional[str] = Field(description="Stance")
-    record: FighterRecord = Field(description="MMA record")
-    current_champion: bool = Field(
-        alias="currentChampion",
-        description="Is the fighter currently a champion?",
-    )
-    career_stats: Optional[FighterCareerStats] = Field(alias="careerStats", description="Career statistics")
-
-    # FIXME: Add correct type
-    @classmethod
-    def from_db_obj(cls, db_obj: Any) -> "FighterReadDetailed":
-        data_dict = {
-            "names": FighterNames.from_db_obj(db_obj),
-            "dateOfBirth": str(db_obj.date_of_birth) if isinstance(db_obj.date_of_birth, date) else None,
-            "physicalFeatures": FighterPhysicalFeatures.from_db_obj(db_obj),
-            "stance": db_obj.stance,
-            "record": FighterRecord.from_db_obj(db_obj),
-            "currentChampion": db_obj.current_champion,
-            "careerStats": FighterCareerStats.from_db_obj(db_obj),
-        }
-        return cls.parse_obj(data_dict)
+FighterReadDetailed.from_db_obj = classmethod(from_db_obj)
