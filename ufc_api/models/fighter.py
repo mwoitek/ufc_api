@@ -4,6 +4,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import root_validator
+from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -73,6 +74,12 @@ class FighterCreate(CustomSQLModel):
             raise ValueError("fighter has no name")
 
         return values
+
+    @validator("stance")
+    def to_title_case(cls, stance: Optional[str]) -> Optional[str]:
+        if stance is None:
+            return
+        return stance.title()
 
 
 class Fighter(SQLModel, table=True):
@@ -191,3 +198,18 @@ class FighterReadDetailed(CustomSQLModel):
                 sub_avg=db_obj.sub_avg,
             ),
         )
+
+    @validator("physical_features")
+    def check_physical_features(
+        cls,
+        physical_features: Optional[PhysicalFeatures],
+    ) -> Optional[PhysicalFeatures]:
+        if physical_features is None:
+            return
+        return physical_features if any(v is not None for v in physical_features.dict().values()) else None
+
+    @validator("career_stats")
+    def check_career_stats(cls, career_stats: Optional[CareerStats]) -> Optional[CareerStats]:
+        if career_stats is None:
+            return
+        return career_stats if all(isinstance(v, float) for v in career_stats.dict().values()) else None

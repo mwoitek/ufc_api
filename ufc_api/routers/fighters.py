@@ -33,7 +33,7 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
         # If stance was passed, get the corresponding ID
         stance = fighter_dict.pop("stance")
         if isinstance(stance, str):
-            statement = select(Stance.id).where(Stance.name == stance.title())
+            statement = select(Stance.id).where(Stance.name == stance)
             stance_id = session.exec(statement).one_or_none()
             if stance_id is not None:
                 fighter_dict["stance_id"] = stance_id
