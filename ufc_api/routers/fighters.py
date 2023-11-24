@@ -15,18 +15,23 @@ router = APIRouter(prefix="/fighters", tags=["fighters"])
 
 
 # TODO: Implement error handling
-@router.post("/", response_model=FighterReadSimple, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=FighterReadSimple,
+    response_model_exclude_none=True,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
-    fighter_dict = fighter.dict(by_alias=True)
+    fighter_dict = fighter.dict()
 
     # If necessary, add date of birth
-    date_of_birth = fighter_dict.pop("dateOfBirth", None)
+    date_of_birth = fighter_dict.pop("date_of_birth")
     if isinstance(date_of_birth, str):
-        fighter_dict["dateOfBirth"] = date.fromisoformat(date_of_birth)
+        fighter_dict["date_of_birth"] = date.fromisoformat(date_of_birth)
 
     with Session(engine) as session:
         # If stance was passed, get the corresponding ID
-        stance = fighter_dict.pop("stance", None)
+        stance = fighter_dict.pop("stance")
         if isinstance(stance, str):
             statement = select(Stance.id).where(Stance.name == stance.title())
             stance_id = session.exec(statement).one_or_none()
@@ -39,8 +44,4 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
         session.commit()
         session.refresh(db_fighter)
 
-        response_data = db_fighter.dict(
-            by_alias=True,
-            include={"id", "created_at", "updated_at", "first_name", "last_name"},
-        )
-        return FighterReadSimple.parse_obj(response_data)
+        return FighterReadSimple.from_db_obj(db_fighter)
