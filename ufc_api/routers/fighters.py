@@ -24,6 +24,16 @@ def convert_date_of_birth(fighter_dict: dict) -> dict:
     return fighter_dict
 
 
+def get_stance_id(fighter_dict: dict, session: Session) -> dict:
+    stance = fighter_dict.pop("stance", None)
+    if isinstance(stance, str):
+        statement = select(Stance.id).where(Stance.name == stance)
+        stance_id = session.exec(statement).one_or_none()
+        if isinstance(stance_id, int):
+            fighter_dict["stance_id"] = stance_id
+    return fighter_dict
+
+
 # TODO: Implement error handling
 @router.post(
     "/",
@@ -36,15 +46,8 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
     fighter_dict = convert_date_of_birth(fighter_dict)
 
     with Session(engine) as session:
-        # If stance was passed, get the corresponding ID
-        stance = fighter_dict.pop("stance")
-        if isinstance(stance, str):
-            statement = select(Stance.id).where(Stance.name == stance)
-            stance_id = session.exec(statement).one_or_none()
-            if stance_id is not None:
-                fighter_dict["stance_id"] = stance_id
+        fighter_dict = get_stance_id(fighter_dict, session)
 
-        # Add fighter to DB, and refresh its data
         db_fighter = Fighter.parse_obj(fighter_dict)
         session.add(db_fighter)
         session.commit()
@@ -78,13 +81,7 @@ def update_fighter(fighter_id: int, fighter: FighterUpdate) -> FighterReadSimple
 
         fighter_dict = fighter.dict(exclude_unset=True)
         fighter_dict = convert_date_of_birth(fighter_dict)
-
-        stance = fighter_dict.pop("stance", None)
-        if isinstance(stance, str):
-            statement = select(Stance.id).where(Stance.name == stance)
-            stance_id = session.exec(statement).one_or_none()
-            if stance_id is not None:
-                fighter_dict["stance_id"] = stance_id
+        fighter_dict = get_stance_id(fighter_dict, session)
 
         for field, value in fighter_dict.items():
             setattr(db_fighter, field, value)
