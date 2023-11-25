@@ -62,3 +62,17 @@ def read_fighter(fighter_id: int) -> FighterReadDetailed:
         stance = session.get(Stance, stance_id).name if isinstance(stance_id, int) else None
 
         return FighterReadDetailed.from_db_obj(fighter, stance)
+
+
+@router.delete("/{fighter_id}")
+def delete_fighter(fighter_id: int) -> dict[str, bool]:
+    with Session(engine) as session:
+        fighter = session.get(Fighter, fighter_id)
+
+        if fighter is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fighter not found")
+
+        session.delete(fighter)
+        session.commit()
+
+        return {"ok": True}
