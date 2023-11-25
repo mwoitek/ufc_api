@@ -74,6 +74,27 @@ GET http://127.0.0.1:8080/fighters/2
 GET http://127.0.0.1:8080/fighters/333
 
 
+# Update fighter: ID that exists
+PATCH http://127.0.0.1:8080/fighters/1
+Content-Type: application/json
+
+{
+  "firstName": "Thomas",
+  "weight": 175,
+  "noContests": 1,
+  "currentChampion": true
+}
+
+
+# Try to update fighter: ID that doesn't exist
+PATCH http://127.0.0.1:8080/fighters/333
+Content-Type: application/json
+
+{
+  "currentChampion": true
+}
+
+
 # Delete fighter: ID that exists
 DELETE http://127.0.0.1:8080/fighters/1
 
