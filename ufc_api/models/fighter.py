@@ -213,3 +213,49 @@ class FighterReadDetailed(CustomSQLModel):
         if career_stats is None:
             return
         return career_stats if all(isinstance(v, float) for v in career_stats.dict().values()) else None
+
+
+class FighterUpdate(CustomSQLModel):
+    first_name: Optional[str] = Field(default=None, description="First name")
+    last_name: Optional[str] = Field(default=None, description="Last name")
+    nickname: Optional[str] = Field(default=None, description="Nickname")
+    date_of_birth: Optional[str] = Field(
+        default=None,
+        description="Date of birth",
+        regex=r"\d{4}-\d{1,2}-\d{1,2}",
+    )
+    height: Optional[int] = Field(default=None, description="Height (in)", gt=0)
+    weight: Optional[int] = Field(default=None, description="Weight (lbs)", gt=0)
+    reach: Optional[int] = Field(default=None, description="Reach (in)", gt=0)
+    stance: Optional[str] = Field(default=None, description="Stance")
+    wins: Optional[int] = Field(default=None, description="Number of wins", ge=0)
+    losses: Optional[int] = Field(default=None, description="Number of losses", ge=0)
+    draws: Optional[int] = Field(default=None, description="Number of draws", ge=0)
+    no_contests: Optional[int] = Field(default=None, description="Number of no contests", ge=0)
+    current_champion: Optional[bool] = Field(default=None, description="Is the fighter currently a champion?")
+    slpm: Optional[float] = Field(default=None, description="Significant strikes landed per minute", ge=0.0)
+    str_acc: Optional[float] = Field(default=None, description="Significant striking accuracy", ge=0.0)
+    sapm: Optional[float] = Field(default=None, description="Significant strikes absorbed per minute", ge=0.0)
+    str_def: Optional[float] = Field(default=None, description="Significant strike defense", ge=0.0)
+    td_avg: Optional[float] = Field(
+        default=None,
+        description="Average takedowns landed per 15 minutes",
+        ge=0.0,
+    )
+    td_acc: Optional[float] = Field(default=None, description="Takedown accuracy", ge=0.0)
+    td_def: Optional[float] = Field(default=None, description="Takedown defense", ge=0.0)
+    sub_avg: Optional[float] = Field(
+        default=None,
+        description="Average submissions attempted per 15 minutes",
+        ge=0.0,
+    )
+
+    class Config:
+        anystr_strip_whitespace = True
+        min_anystr_length = 1
+
+    @validator("stance")
+    def to_title_case(cls, stance: Optional[str]) -> Optional[str]:
+        if stance is None:
+            return
+        return stance.title()
