@@ -1,6 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter
+from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import Session
 from sqlmodel import select
@@ -8,6 +9,7 @@ from sqlmodel import select
 from ..database import engine
 from ..models.fighter import Fighter
 from ..models.fighter import FighterCreate
+from ..models.fighter import FighterReadDetailed
 from ..models.fighter import FighterReadSimple
 from ..models.stance import Stance
 
@@ -45,3 +47,18 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
         session.refresh(db_fighter)
 
         return FighterReadSimple.from_db_obj(db_fighter)
+
+
+@router.get("/{fighter_id}", response_model=FighterReadDetailed, response_model_exclude_none=True)
+def read_fighter(fighter_id: int) -> FighterReadDetailed:
+    with Session(engine) as session:
+        fighter = session.get(Fighter, fighter_id)
+
+        if fighter is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fighter not found")
+
+        # If necessary, get stance from the corresponding ID
+        stance_id = fighter.stance_id
+        stance = session.get(Stance, stance_id).name if isinstance(stance_id, int) else None
+
+        return FighterReadDetailed.from_db_obj(fighter, stance)
