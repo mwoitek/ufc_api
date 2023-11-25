@@ -8,6 +8,8 @@ from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
+VALID_STANCES = {"Orthodox", "Southpaw", "Switch", "Open Stance", "Sideways"}
+
 
 def to_camel_case(s: str) -> str:
     parts = s.split("_")
@@ -18,6 +20,15 @@ class CustomSQLModel(SQLModel):
     class Config:
         alias_generator = to_camel_case
         allow_population_by_field_name = True
+
+
+def check_stance(stance: Optional[str]) -> Optional[str]:
+    if stance is None:
+        return
+    stance = stance.title()
+    if stance not in VALID_STANCES:
+        raise ValueError("invalid stance")
+    return stance
 
 
 class FighterCreate(CustomSQLModel):
@@ -55,6 +66,8 @@ class FighterCreate(CustomSQLModel):
         ge=0.0,
     )
 
+    _check_stance = validator("stance", allow_reuse=True)(check_stance)
+
     class Config:
         anystr_strip_whitespace = True
         min_anystr_length = 1
@@ -74,12 +87,6 @@ class FighterCreate(CustomSQLModel):
             raise ValueError("fighter has no name")
 
         return values
-
-    @validator("stance")
-    def to_title_case(cls, stance: Optional[str]) -> Optional[str]:
-        if stance is None:
-            return
-        return stance.title()
 
 
 class Fighter(SQLModel, table=True):
@@ -250,12 +257,8 @@ class FighterUpdate(CustomSQLModel):
         ge=0.0,
     )
 
+    _check_stance = validator("stance", allow_reuse=True)(check_stance)
+
     class Config:
         anystr_strip_whitespace = True
         min_anystr_length = 1
-
-    @validator("stance")
-    def to_title_case(cls, stance: Optional[str]) -> Optional[str]:
-        if stance is None:
-            return
-        return stance.title()

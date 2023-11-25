@@ -27,7 +27,7 @@ Content-Type: application/json
   "height": 74,
   "weight": 185,
   "reach": 77,
-  "stance": "Southpaw",
+  "stance": " southpaw ",
   "wins": 34,
   "losses": 11,
   "draws": 0,
@@ -51,6 +51,24 @@ Content-Type: application/json
 {
   "dateOfBirth": "1978-07-13",
   "weight": 155,
+  "wins": 5,
+  "losses": 3,
+  "draws": 0,
+  "noContests": 0,
+  "currentChampion": false
+}
+
+
+# Try to create a fighter: Invalid stance
+POST http://127.0.0.1:8080/fighters/
+Content-Type: application/json
+
+{
+  "firstName": "Tom",
+  "lastName": "Aaron",
+  "dateOfBirth": "1978-07-13",
+  "weight": 155,
+  "stance": "garbage",
   "wins": 5,
   "losses": 3,
   "draws": 0,
