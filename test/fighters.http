@@ -1,0 +1,74 @@
+# Create a fighter: Incomplete data
+POST http://127.0.0.1:8080/fighters/
+Content-Type: application/json
+
+{
+  "firstName": "Tom",
+  "lastName": "Aaron",
+  "dateOfBirth": "1978-07-13",
+  "weight": 155,
+  "wins": 5,
+  "losses": 3,
+  "draws": 0,
+  "noContests": 0,
+  "currentChampion": false
+}
+
+
+# Create a fighter: Complete data
+POST http://127.0.0.1:8080/fighters/
+Content-Type: application/json
+
+{
+  "firstName": "Anderson",
+  "lastName": "Silva",
+  "nickname": "The Spider",
+  "dateOfBirth": "1975-04-14",
+  "height": 74,
+  "weight": 185,
+  "reach": 77,
+  "stance": "Southpaw",
+  "wins": 34,
+  "losses": 11,
+  "draws": 0,
+  "noContests": 1,
+  "currentChampion": false,
+  "slpm": 3.05,
+  "strAcc": 0.61,
+  "sapm": 2.05,
+  "strDef": 0.6,
+  "tdAvg": 0.5,
+  "tdAcc": 0.77,
+  "tdDef": 0.69,
+  "subAvg": 0.8
+}
+
+
+# Try to create a fighter: No name
+POST http://127.0.0.1:8080/fighters/
+Content-Type: application/json
+
+{
+  "dateOfBirth": "1978-07-13",
+  "weight": 155,
+  "wins": 5,
+  "losses": 3,
+  "draws": 0,
+  "noContests": 0,
+  "currentChampion": false
+}
+
+
+# TODO: Test more cases with bad data
+
+
+# Read fighter data: Incomplete data
+GET http://127.0.0.1:8080/fighters/1
+
+
+# Read fighter data: Complete data
+GET http://127.0.0.1:8080/fighters/2
+
+
+# Try to read fighter data: ID that doesn't exist
+GET http://127.0.0.1:8080/fighters/333
