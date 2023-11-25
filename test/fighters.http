@@ -72,3 +72,11 @@ GET http://127.0.0.1:8080/fighters/2
 
 # Try to read fighter data: ID that doesn't exist
 GET http://127.0.0.1:8080/fighters/333
+
+
+# Delete fighter: ID that exists
+DELETE http://127.0.0.1:8080/fighters/1
+
+
+# Try to delete fighter: ID that doesn't exist
+DELETE http://127.0.0.1:8080/fighters/333
