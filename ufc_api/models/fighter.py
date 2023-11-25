@@ -134,9 +134,9 @@ class FighterReadSimple(CustomSQLModel):
 
 
 class PhysicalFeatures(SQLModel):
-    height: Optional[int] = Field(..., description="Height (in)")
-    weight: Optional[int] = Field(..., description="Weight (lbs)")
-    reach: Optional[int] = Field(..., description="Reach (in)")
+    height: Optional[int] = Field(description="Height (in)")
+    weight: Optional[int] = Field(description="Weight (lbs)")
+    reach: Optional[int] = Field(description="Reach (in)")
 
 
 class Record(CustomSQLModel):
@@ -147,29 +147,29 @@ class Record(CustomSQLModel):
 
 
 class CareerStats(CustomSQLModel):
-    slpm: Optional[float] = Field(..., description="Significant strikes landed per minute")
-    str_acc: Optional[float] = Field(..., description="Significant striking accuracy")
-    sapm: Optional[float] = Field(..., description="Significant strikes absorbed per minute")
-    str_def: Optional[float] = Field(..., description="Significant strike defense")
-    td_avg: Optional[float] = Field(..., description="Average takedowns landed per 15 minutes")
-    td_acc: Optional[float] = Field(..., description="Takedown accuracy")
-    td_def: Optional[float] = Field(..., description="Takedown defense")
-    sub_avg: Optional[float] = Field(..., description="Average submissions attempted per 15 minutes")
+    slpm: Optional[float] = Field(description="Significant strikes landed per minute")
+    str_acc: Optional[float] = Field(description="Significant striking accuracy")
+    sapm: Optional[float] = Field(description="Significant strikes absorbed per minute")
+    str_def: Optional[float] = Field(description="Significant strike defense")
+    td_avg: Optional[float] = Field(description="Average takedowns landed per 15 minutes")
+    td_acc: Optional[float] = Field(description="Takedown accuracy")
+    td_def: Optional[float] = Field(description="Takedown defense")
+    sub_avg: Optional[float] = Field(description="Average submissions attempted per 15 minutes")
 
 
 class FighterReadDetailed(CustomSQLModel):
     id: int = Field(..., description="ID")
     names: Names = Field(..., description="All known names")
-    date_of_birth: Optional[date] = Field(..., description="Date of birth")
-    physical_features: Optional[PhysicalFeatures] = Field(..., description="Physical features")
-    stance: Optional[str] = Field(..., description="Stance")
+    date_of_birth: Optional[date] = Field(description="Date of birth")
+    physical_features: Optional[PhysicalFeatures] = Field(description="Physical features")
+    stance: Optional[str] = Field(description="Stance")
     record: Record = Field(..., description="MMA record")
     current_champion: bool = Field(..., description="Is the fighter currently a champion?")
-    career_stats: Optional[CareerStats] = Field(..., description="Career statistics")
+    career_stats: Optional[CareerStats] = Field(description="Career statistics")
 
     # FIXME: Add specific type
     @classmethod
-    def from_db_obj(cls, db_obj: Any) -> "FighterReadDetailed":
+    def from_db_obj(cls, db_obj: Any, stance: Optional[str] = None) -> "FighterReadDetailed":
         return cls(
             id=db_obj.id,
             names=Names(first_name=db_obj.first_name, last_name=db_obj.last_name, nickname=db_obj.nickname),
@@ -179,7 +179,7 @@ class FighterReadDetailed(CustomSQLModel):
                 weight=db_obj.weight,
                 reach=db_obj.reach,
             ),
-            stance=db_obj.stance,
+            stance=db_obj.stance if hasattr(db_obj, "stance") else stance,
             record=Record(
                 wins=db_obj.wins,
                 losses=db_obj.losses,
