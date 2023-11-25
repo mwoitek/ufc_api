@@ -17,6 +17,13 @@ from ..models.stance import Stance
 router = APIRouter(prefix="/fighters", tags=["fighters"])
 
 
+def convert_date_of_birth(fighter_dict: dict) -> dict:
+    date_of_birth = fighter_dict.pop("date_of_birth", None)
+    if isinstance(date_of_birth, str):
+        fighter_dict["date_of_birth"] = date.fromisoformat(date_of_birth)
+    return fighter_dict
+
+
 # TODO: Implement error handling
 @router.post(
     "/",
@@ -26,11 +33,7 @@ router = APIRouter(prefix="/fighters", tags=["fighters"])
 )
 def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
     fighter_dict = fighter.dict()
-
-    # If necessary, add date of birth
-    date_of_birth = fighter_dict.pop("date_of_birth")
-    if isinstance(date_of_birth, str):
-        fighter_dict["date_of_birth"] = date.fromisoformat(date_of_birth)
+    fighter_dict = convert_date_of_birth(fighter_dict)
 
     with Session(engine) as session:
         # If stance was passed, get the corresponding ID
@@ -74,10 +77,7 @@ def update_fighter(fighter_id: int, fighter: FighterUpdate) -> FighterReadSimple
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fighter not found")
 
         fighter_dict = fighter.dict(exclude_unset=True)
-
-        date_of_birth = fighter_dict.pop("date_of_birth", None)
-        if isinstance(date_of_birth, str):
-            fighter_dict["date_of_birth"] = date.fromisoformat(date_of_birth)
+        fighter_dict = convert_date_of_birth(fighter_dict)
 
         stance = fighter_dict.pop("stance", None)
         if isinstance(stance, str):
