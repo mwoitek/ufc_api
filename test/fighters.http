@@ -80,6 +80,10 @@ Content-Type: application/json
 # TODO: Test more cases with bad data
 
 
+# Read list of fighters
+GET http://127.0.0.1:8080/fighters/
+
+
 # Read fighter data: Incomplete data
 GET http://127.0.0.1:8080/fighters/1
 
