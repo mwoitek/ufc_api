@@ -57,6 +57,21 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
         return FighterReadSimple.from_db_obj(db_fighter)
 
 
+@router.get("/", response_model=list[FighterReadDetailed], response_model_exclude_none=True)
+def read_fighters() -> list[FighterReadDetailed]:
+    with Session(engine) as session:
+        statement = select(Fighter, Stance).join(Stance, isouter=True)
+        results = session.exec(statement)
+
+        response_list = []
+
+        for db_fighter, db_stance in results:
+            stance = db_stance.name if db_stance is not None else None
+            response_list.append(FighterReadDetailed.from_db_obj(db_fighter, stance))
+
+        return response_list
+
+
 @router.get("/{fighter_id}", response_model=FighterReadDetailed, response_model_exclude_none=True)
 def read_fighter(fighter_id: int) -> FighterReadDetailed:
     with Session(engine) as session:
