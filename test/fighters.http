@@ -80,8 +80,20 @@ Content-Type: application/json
 # TODO: Test more cases with bad data
 
 
-# Read list of fighters
+# Read list of fighters: No query parameters
 GET http://127.0.0.1:8080/fighters/
+
+
+# Read list of fighters: Using skip parameter
+GET http://127.0.0.1:8080/fighters/?skip=1
+
+
+# Read list of fighters: Using limit parameter
+GET http://127.0.0.1:8080/fighters/?limit=1
+
+
+# Try to read list of fighters: Invalid limit parameter
+GET http://127.0.0.1:8080/fighters/?limit=1000
 
 
 # Read fighter data: Incomplete data
