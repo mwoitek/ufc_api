@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import status
 from sqlmodel import Session
 from sqlmodel import select
@@ -58,9 +59,9 @@ def create_fighter(fighter: FighterCreate) -> FighterReadSimple:
 
 
 @router.get("/", response_model=list[FighterReadDetailed], response_model_exclude_none=True)
-def read_fighters() -> list[FighterReadDetailed]:
+def read_fighters(skip: int = 0, limit: int = Query(default=10, le=100)) -> list[FighterReadDetailed]:
     with Session(engine) as session:
-        statement = select(Fighter, Stance).join(Stance, isouter=True)
+        statement = select(Fighter, Stance).join(Stance, isouter=True).offset(skip).limit(limit)
         results = session.exec(statement)
 
         response_list = []
