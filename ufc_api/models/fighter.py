@@ -1,7 +1,7 @@
 from datetime import date
 from datetime import datetime
-from typing import Any
 from typing import Optional
+from typing import cast
 
 from pydantic import root_validator
 from pydantic import validator
@@ -196,11 +196,10 @@ class FighterReadDetailed(CustomSQLModel):
     current_champion: bool = Field(..., description=DESC["current_champion"])
     career_stats: Optional[CareerStats] = Field(description=DESC["career_stats"])
 
-    # FIXME: Add specific type
     @classmethod
-    def from_db_obj(cls, db_obj: Any, stance: Optional[str] = None) -> "FighterReadDetailed":
+    def from_db_obj(cls, db_obj: Fighter, stance: Optional[str] = None) -> "FighterReadDetailed":
         return cls(
-            id=db_obj.id,
+            id=cast(int, db_obj.id),
             names=Names(first_name=db_obj.first_name, last_name=db_obj.last_name, nickname=db_obj.nickname),
             date_of_birth=db_obj.date_of_birth,
             physical_features=PhysicalFeatures(
@@ -208,7 +207,7 @@ class FighterReadDetailed(CustomSQLModel):
                 weight=db_obj.weight,
                 reach=db_obj.reach,
             ),
-            stance=db_obj.stance if hasattr(db_obj, "stance") else stance,
+            stance=stance,
             record=Record(
                 wins=db_obj.wins,
                 losses=db_obj.losses,
