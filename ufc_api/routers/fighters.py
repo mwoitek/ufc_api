@@ -1,4 +1,6 @@
 from datetime import date
+from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import HTTPException
@@ -34,7 +36,6 @@ def get_stance_id(fighter_dict: dict, session: Session) -> dict:
     return fighter_dict
 
 
-# TODO: Implement error handling
 @router.post(
     "/",
     response_model=FighterReadSimple,
@@ -64,9 +65,11 @@ def read_fighter(fighter_id: int) -> FighterReadDetailed:
         if fighter is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fighter not found")
 
-        # If necessary, get stance from the corresponding ID
-        stance_id = fighter.stance_id
-        stance = session.get(Stance, stance_id).name if isinstance(stance_id, int) else None
+        stance: Optional[str] = None
+        if isinstance(fighter.stance_id, int):
+            db_stance = session.get(Stance, fighter.stance_id)
+            if db_stance is not None:
+                stance = db_stance.name
 
         return FighterReadDetailed.from_db_obj(fighter, stance)
 
@@ -82,6 +85,7 @@ def update_fighter(fighter_id: int, fighter: FighterUpdate) -> FighterReadSimple
         fighter_dict = fighter.dict(exclude_unset=True)
         fighter_dict = convert_date_of_birth(fighter_dict)
         fighter_dict = get_stance_id(fighter_dict, session)
+        fighter_dict["updated_at"] = datetime.now()
 
         for field, value in fighter_dict.items():
             setattr(db_fighter, field, value)
